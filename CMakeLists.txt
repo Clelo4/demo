@@ -8,3 +8,6 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
 endif()
 
 add_executable(translate_virtual_to_physical_address translate_virtual_to_physical_address.c)
+
+add_library(mm "")
+target_sources(mm PRIVATE "./vm/mm.c" "./vm/mm.h" "./vm/memlib.c")
