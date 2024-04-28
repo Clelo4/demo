@@ -3,6 +3,14 @@ project(memory_manager C)
 
 set(CMAKE_C_STANDARD 11)
 
+if(NOT CMAKE_C_FLAGS MATCHES "-Wstrict-prototypes")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wstrict-prototypes")
+endif(NOT CMAKE_C_FLAGS MATCHES "-Wstrict-prototypes")
+
+if(NOT CMAKE_C_FLAGS MATCHES "-Werror")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+endif(NOT CMAKE_C_FLAGS MATCHES "-Werror")
+
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
     add_definitions(-D__x86_64__)
 endif()

@@ -3,6 +3,7 @@
 #define WSIZE 4
 #define DSIZE 8
 #define CHUNSIZE (1 << 12)
+#define MIN_BLOCK_SIZE (4 * WSIZE)
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
 
@@ -28,6 +29,10 @@
 static char* heap_listp = NULL;
 
 extern void* mem_sbrk(int incr);
+
+static void* find_fit(size_t asize);
+
+static void place(void* bp, size_t asize);
 
 static void* coalesce(void* bp);
 
@@ -81,7 +86,7 @@ static void* coalesce(void* bp) {
 }
 
 int mm_init(void) {
-  if (heap_listp = mem_sbrk(4 * WSIZE) == (void*)-1) return -1;
+  if ((heap_listp = mem_sbrk(MIN_BLOCK_SIZE)) == (void*)-1) return -1;
   // Alignment padding
   PUT(heap_listp, 0);
   // Prologue header
@@ -94,16 +99,36 @@ int mm_init(void) {
   heap_listp += (2 * WSIZE);
 
   // Extend the empty headp with a free block of CHUNSIZE bytes
-  if (extend_heap((CHUNSIZE / WSIZE) == NULL)) return -1;
+  if (extend_heap(CHUNSIZE / WSIZE) == NULL) return -1;
   return 0;
 }
 
 void* mm_malloc(size_t size) {
+  // Adjusted block size
   size_t asize;
+  // Amount to extend heap if no fit
   size_t extendsize;
   char* bp;
 
+  // Ignore spurious requests
+  if (size == 0) return NULL;
 
+  if (size <= DSIZE)
+    asize = 2 * DSIZE;
+  else
+    asize = DSIZE * ((size + DSIZE + DSIZE - 1) / DSIZE);
+
+  // Search the free list for a fit
+  if ((bp = find_fit(asize)) != NULL) {
+    place(bp, asize);
+    return bp;
+  }
+
+  // Not fit found. Get more memory and place the block
+  extendsize = MAX(asize, CHUNSIZE);
+  if ((bp = extend_heap(extendsize / WSIZE)) == NULL) return NULL;
+
+  place(bp, asize);
   return bp;
 }
 
@@ -113,4 +138,33 @@ void mm_free(void* bp) {
   PUT(FTRP(bp), PACK(size, 0));
 
   coalesce(bp);
+}
+
+static void* find_fit(size_t asize) {
+  void* current_bp = heap_listp;
+
+  void* next_bp = NULL;
+  while ((next_bp = NEXT_BLKP(current_bp)) &&
+         !(GET_SIZE(next_bp) == 0 && GET_ALLOC(next_bp) != 0)) {
+    if (GET_SIZE(next_bp) >= asize && GET_ALLOC(next_bp) == 0) {
+      return next_bp;
+    }
+    current_bp = next_bp;
+  }
+
+  return NULL;
+}
+
+// Place bp in the first empty block. Split the empty block only if the size of
+// the left block is larger than MIN_BLOCK_SIZE.
+static void place(void* bp, size_t asize) {
+  size_t empty_size = GET_SIZE(HDRP(bp));
+
+  size_t remain_size = empty_size - asize;
+  if (remain_size >= MIN_BLOCK_SIZE) {
+    PUT(HDRP(bp), PACK(asize, 1));
+    PUT(FTRP(bp), PACK(asize, 1));
+    PUT(HDRP(NEXT_BLKP(bp)), PACK(remain_size, 0));
+    PUT(FTRP(NEXT_BLKP(bp)), PACK(remain_size, 0));
+  }
 }
