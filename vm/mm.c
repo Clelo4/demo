@@ -1,5 +1,7 @@
 #include <stddef.h>
 
+#include "memlib.h"
+
 #define WSIZE 4
 #define DSIZE 8
 #define CHUNSIZE (1 << 12)
@@ -27,8 +29,6 @@
 #define PREV_BLKP(bp) ((char*)(bp) - GET_SIZE(((char*)(bp) - DSIZE)))
 
 static char* heap_listp = NULL;
-
-extern void* mem_sbrk(int incr);
 
 static void* find_fit(size_t asize);
 
@@ -145,7 +145,7 @@ static void* find_fit(size_t asize) {
 
   void* next_bp = NULL;
   while ((next_bp = NEXT_BLKP(current_bp)) &&
-         !(GET_SIZE(next_bp) == 0 && GET_ALLOC(next_bp) != 0)) {
+         !(GET_SIZE(next_bp) == 0 && GET_ALLOC(next_bp) == 0)) {
     if (GET_SIZE(next_bp) >= asize && GET_ALLOC(next_bp) == 0) {
       return next_bp;
     }
@@ -160,10 +160,11 @@ static void* find_fit(size_t asize) {
 static void place(void* bp, size_t asize) {
   size_t empty_size = GET_SIZE(HDRP(bp));
 
+  PUT(HDRP(bp), PACK(asize, 1));
+  PUT(FTRP(bp), PACK(asize, 1));
+
   size_t remain_size = empty_size - asize;
   if (remain_size >= MIN_BLOCK_SIZE) {
-    PUT(HDRP(bp), PACK(asize, 1));
-    PUT(FTRP(bp), PACK(asize, 1));
     PUT(HDRP(NEXT_BLKP(bp)), PACK(remain_size, 0));
     PUT(FTRP(NEXT_BLKP(bp)), PACK(remain_size, 0));
   }

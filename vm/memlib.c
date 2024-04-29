@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "memlib.h"
+
 #define MAX_HEAP (1<<14)
 
 static char* mem_heap;
