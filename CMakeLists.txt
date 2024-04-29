@@ -25,5 +25,6 @@ target_sources(vm PRIVATE "./vm/mm.c" "./vm/mm.h" "./vm/memlib.c" "./vm/memlib.h
 add_executable(vm_test "./vm/vm_test.c")
 target_link_libraries(vm_test vm)
 
-add_library(dlmalloc "")
+add_library(dlmalloc ""
+        dlmalloc/dlmalloc.h)
 target_sources(dlmalloc PRIVATE "./dlmalloc/dlmalloc.c")
