@@ -15,6 +15,8 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
     add_definitions(-D__x86_64__)
 endif()
 
+option(BUILD_SHARED_LIBS "Build shared libray" ON)
+
 add_executable(translate_virtual_to_physical_address translate_virtual_to_physical_address.c)
 
 add_library(vm "")
