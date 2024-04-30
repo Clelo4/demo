@@ -116,6 +116,7 @@ void* mm_malloc(size_t size) {
   if (size <= DSIZE)
     asize = 2 * DSIZE;
   else
+    // Add more one DSIZE for header and footer.
     asize = DSIZE * ((size + DSIZE + DSIZE - 1) / DSIZE);
 
   // Search the free list for a fit
