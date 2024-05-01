@@ -159,13 +159,14 @@ static void* find_fit(size_t asize) {
 // Place bp in the first empty block. Split the empty block only if the size of
 // the left block is larger than MIN_BLOCK_SIZE.
 static void place(void* bp, size_t asize) {
-  size_t empty_size = GET_SIZE(HDRP(bp));
+  size_t total_size = GET_SIZE(HDRP(bp));
+  size_t remain_size = total_size - asize;
 
-  PUT(HDRP(bp), PACK(asize, 1));
-  PUT(FTRP(bp), PACK(asize, 1));
-
-  size_t remain_size = empty_size - asize;
+  // 默认使用total_size大小，如果剩余remain_size大于MIN_BLOCK_SIZE，则使用asize
   if (remain_size >= MIN_BLOCK_SIZE) {
+    PUT(HDRP(bp), PACK(asize, 1));
+    PUT(FTRP(bp), PACK(asize, 1));
+
     PUT(HDRP(NEXT_BLKP(bp)), PACK(remain_size, 0));
     PUT(FTRP(NEXT_BLKP(bp)), PACK(remain_size, 0));
   }
