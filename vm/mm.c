@@ -4,10 +4,15 @@
 #include "memlib.h"
 
 #define WSIZE (sizeof(uint32_t))
+
 #define DSIZE (sizeof(void*))
+
 #define CHUNSIZE (1 << 12)
+
 #define CHUNDSIZE 513
+
 #define MIN_BLOCK_SIZE (4 * WSIZE)
+
 #define MIN_BLOCK_DSIZE 3
 
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
@@ -17,22 +22,27 @@
 
 // Read and write a word at address p
 #define GET(p) (*(uint32_t*)(p))
+
 #define PUT(p, val) (*(uint32_t*)(p) = (val))
 
 // Read the size and allocated fields from address p
 #define GET_SIZE(p) (GET(p) & ~0x7)
+
 #define GET_ALLOC(p) (GET(p) & 0x1)
 
 // Given block ptr bp, compute address of its header and footer
 #define HDRP(bp) ((char*)(bp) - WSIZE)
+
 #define FTRP(bp) ((char*)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
 
 // Given block ptr bp, compute address of next and previous blocks
 #define NEXT_BLKP(bp) ((char*)(bp) + GET_SIZE(((char*)(bp) - WSIZE)))
+
 #define PREV_BLKP(bp) ((char*)(bp) - GET_SIZE(((char*)(bp) - DSIZE)))
 
 // Get next link block pointer
 #define NEXT_BLOCK_PTR(bp) (*((void**)((void*)bp + sizeof(void*))))
+
 // Get pre link block pointer
 #define PRE_BLOCK_PTR(bp) (*(void**)bp)
 
@@ -47,7 +57,11 @@ static void *implicit_extend_heap(size_t words);
 static void *implicit_coalesce(void *bp);
 
 // Explicit link
-static char* link_list;
+static char *link_list;
+
+const int kHeadBlockSize = WSIZE + sizeof(void *) * 2 + WSIZE;
+
+#define GET_HEAD_BP(index) ((link_list) + ((index) * kHeadBlockSize) + WSIZE)
 
 static void *explicit_find_fit(size_t adsize);
 
@@ -193,10 +207,6 @@ void *implicit_coalesce(void *bp) {
   return bp;
 }
 
-const int kHeadBlockSize = WSIZE + sizeof(void*) * 2 + WSIZE;
-
-#define GET_HEAD_BP(index) ((link_list) + ((index) * kHeadBlockSize) + WSIZE)
-
 inline static int explicit_mm_init(void) {
   // 启发式策略：尽量维持少量的大空闲块，128个小块，3个大块
   int total_list_size = (128 + 3) * kHeadBlockSize;
@@ -207,12 +217,11 @@ inline static int explicit_mm_init(void) {
 
   // 初始化小块：1-128大小的小块
   for (int i = 0; i < 131; i++) {
-    void* bp = GET_HEAD_BP(i);
+    void *bp = GET_HEAD_BP(i);
     PRE_BLOCK_PTR(bp) = NULL;
     NEXT_BLOCK_PTR(bp) = NULL;
     PUT(HDRP(bp), PACK(kHeadBlockSize, 1));
     PUT(FTRP(bp), PACK(kHeadBlockSize, 1));
-
   }
 
   void *head;
@@ -276,8 +285,8 @@ void *explicit_find_fit(size_t adsize) {
   }
 
   for (int i = start_i; i <= 130; i++) {
-    void* head = GET_HEAD_BP(i);
-    void* cur = NEXT_BLOCK_PTR(head);
+    void *head = GET_HEAD_BP(i);
+    void *cur = NEXT_BLOCK_PTR(head);
     while (cur != NULL) {
       size_t size = GET_SIZE(HDRP(cur));
       // 首次适配
@@ -337,7 +346,7 @@ void *explicit_extend_heap(size_t extend_dsize) {
 
   int fit_index = find_fit_index(extend_dsize);
 
-  void* footer = FTRP(bp);
+  void *footer = FTRP(bp);
   explicit_insert_to_list(bp, fit_index);
 
   return explicit_coalesce(bp, 1);
@@ -422,7 +431,7 @@ static void explicit_remove_block(void *bp) {
 }
 
 void explicit_insert_to_list(void *bp, int index) {
-  void* head = GET_HEAD_BP(index);
+  void *head = GET_HEAD_BP(index);
   NEXT_BLOCK_PTR(bp) = NEXT_BLOCK_PTR(head);
   PRE_BLOCK_PTR(bp) = head;
   if (NEXT_BLOCK_PTR(head) != NULL)
