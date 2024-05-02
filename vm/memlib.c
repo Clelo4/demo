@@ -4,6 +4,7 @@
 
 #include "memlib.h"
 
+// 最大堆内存大小
 #define MAX_HEAP (1<<14)
 
 static char* mem_heap;
