@@ -3,8 +3,8 @@
 
 #include "memlib.h"
 
-#define WSIZE 4
-#define DSIZE 8
+#define WSIZE (sizeof(uint32_t))
+#define DSIZE (sizeof(void*))
 #define CHUNSIZE (1 << 12)
 #define CHUNDSIZE 513
 #define MIN_BLOCK_SIZE (4 * WSIZE)
