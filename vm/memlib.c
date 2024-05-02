@@ -5,7 +5,7 @@
 #include "memlib.h"
 
 // 最大堆内存大小
-#define MAX_HEAP (1<<14)
+#define MAX_HEAP (1<<28)
 
 static char *mem_heap;
 static char *mem_brk;
@@ -33,5 +33,6 @@ void *mem_sbrk(int incr) {
     return (void *) -1;
   }
   mem_brk += incr;
+  printf("cur mem size: %ld\n", mem_brk - mem_heap);
   return (void *) old_brk;
 }

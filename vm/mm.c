@@ -1,5 +1,7 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "memlib.h"
 
@@ -41,7 +43,7 @@
 #define PREV_BLKP(bp) ((char*)(bp) - GET_SIZE(((char*)(bp) - DSIZE)))
 
 // Get next link block pointer
-#define NEXT_BLOCK_PTR(bp) (*((void**)((void*)bp + sizeof(void*))))
+#define NEXT_BLOCK_PTR(bp) (*((void**)((char*)bp + sizeof(void*))))
 
 // Get pre link block pointer
 #define PRE_BLOCK_PTR(bp) (*(void**)bp)
@@ -61,7 +63,10 @@ static char *link_list;
 
 const int kHeadBlockSize = WSIZE + sizeof(void *) * 2 + WSIZE;
 
-#define GET_HEAD_BP(index) ((link_list) + ((index) * kHeadBlockSize) + WSIZE)
+// #define GET_HEAD_BP(index) ((link_list) + ((index) * kHeadBlockSize) + WSIZE)
+void* GET_HEAD_BP(int index) {
+  return link_list + (index * kHeadBlockSize) + WSIZE;
+}
 
 static void *explicit_find_fit(size_t adsize);
 
@@ -281,7 +286,7 @@ void *explicit_find_fit(size_t adsize) {
   if (adsize <= 128) {
     start_i = adsize - 1;
   } else {
-    start_i = 129;
+    start_i = 128;
   }
 
   for (int i = start_i; i <= 130; i++) {
@@ -354,12 +359,17 @@ void *explicit_extend_heap(size_t extend_dsize) {
 
 void *explicit_coalesce(void *bp, int is_free) {
   size_t size = GET_SIZE(HDRP(bp));
-  size_t cur_index = find_fit_index(size / DSIZE);
 
   size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
   size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
 
   if (prev_alloc && next_alloc) {
+    if (is_free) {
+      // 提取bp
+      explicit_remove_block(bp);
+    }
+    size_t new_index = find_fit_index(size / DSIZE);
+    explicit_insert_to_list(bp, new_index);
     return bp;
   } else if (prev_alloc && !next_alloc) {
     void *next = NEXT_BLKP(bp);
@@ -367,7 +377,6 @@ void *explicit_coalesce(void *bp, int is_free) {
 
     PUT(HDRP(bp), PACK(size, 0));
     PUT(FTRP(bp), PACK(size, 0));
-    int new_index = find_fit_index(size / DSIZE);
 
     // 提取next
     explicit_remove_block(next);
@@ -377,15 +386,15 @@ void *explicit_coalesce(void *bp, int is_free) {
       explicit_remove_block(bp);
     }
 
+    int new_index = find_fit_index(size / DSIZE);
     explicit_insert_to_list(bp, new_index);
     return bp;
   } else if (!prev_alloc && next_alloc) {
     void *pre = PREV_BLKP(bp);
-    size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+    size += GET_SIZE(HDRP(pre));
 
     PUT(FTRP(bp), PACK(size, 0));
-    PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-    int new_index = find_fit_index(size / DSIZE);
+    PUT(HDRP(pre), PACK(size, 0));
 
     // 提取pre
     explicit_remove_block(pre);
@@ -395,6 +404,7 @@ void *explicit_coalesce(void *bp, int is_free) {
       explicit_remove_block(bp);
     }
 
+    int new_index = find_fit_index(size / DSIZE);
     explicit_insert_to_list(pre, new_index);
 
     return pre;
@@ -403,9 +413,7 @@ void *explicit_coalesce(void *bp, int is_free) {
     void *next = NEXT_BLKP(bp);
     size += GET_SIZE(HDRP(pre)) + GET_SIZE(FTRP(next));
     PUT(HDRP(pre), PACK(size, 0));
-    PUT(FTRP(pre), PACK(size, 0));
-
-    int new_index = find_fit_index(size / DSIZE);
+    PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
 
     // 提取pre
     explicit_remove_block(pre);
@@ -417,6 +425,7 @@ void *explicit_coalesce(void *bp, int is_free) {
       explicit_remove_block(bp);
     }
 
+    int new_index = find_fit_index(size / DSIZE);
     explicit_insert_to_list(pre, new_index);
 
     return pre;
@@ -448,14 +457,26 @@ int mm_init(void) {
 }
 
 void *mm_malloc(size_t size) {
+  if (size <= 0) {
+    printf("Error: mm_malloc failed. Size is less than or equal to 0...\n");
+    exit(1);
+  }
 #ifdef VM_EXPLICIT_LINK
-  return explicit_mm_malloc(size);
+  void* res = explicit_mm_malloc(size);
 #else
-  return implicit_mm_malloc(size);
+  void* res = implicit_mm_malloc(size);
 #endif // VM_EXPLICIT_LINK
+  if (res == NULL) {
+    printf("Error: mm_malloc failed. Out of memory...\n");
+  }
+  return res;
 }
 
 void mm_free(void *ptr) {
+  if (ptr == NULL) {
+    printf("Error: mm_free failed. NULL pointer...\n");
+    exit(1);
+  }
 #ifdef VM_EXPLICIT_LINK
   explicit_mm_free(ptr);
 #else
