@@ -1,6 +1,4 @@
-#include <assert.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -104,8 +102,6 @@ inline static int implicit_mm_init(void) {
 inline static void *implicit_mm_malloc(size_t size) {
   // Adjusted block size
   size_t asize;
-  // Amount to extend heap if no fit
-  size_t extendsize;
   void *bp;
 
   // Ignore spurious requests
@@ -123,8 +119,10 @@ inline static void *implicit_mm_malloc(size_t size) {
     return bp;
   }
 
+  // Amount to extend heap if no fit
+  size_t extendsize = MAX(asize, CHUNSIZE);
+
   // Not fit found. Get more memory and place the block
-  extendsize = MAX(asize, CHUNSIZE);
   if ((bp = implicit_extend_heap(extendsize / WSIZE)) == NULL) return NULL;
 
   implicit_place(bp, asize);
@@ -175,10 +173,9 @@ void implicit_place(void *bp, size_t asize) {
 
 void *implicit_extend_heap(size_t words) {
   char *bp;
-  size_t size;
 
   // Allocate an even number of words to maintain alignment
-  size = (words % 2) ? (words + 1) * WSIZE : words * WSIZE;
+  size_t size = (words % 2) ? (words + 1) * WSIZE : words * WSIZE;
   if ((long) (bp = mem_sbrk(size)) == -1) return NULL;
 
   // Initialize free block header/footer and the epilogue header
