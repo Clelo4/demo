@@ -65,7 +65,7 @@ static char *link_list;
 const int kHeadBlockSize = WSIZE + sizeof(void *) * 2 + WSIZE;
 
 // #define GET_HEAD_BP(index) ((link_list) + ((index) * kHeadBlockSize) + WSIZE)
-void* GET_HEAD_BP(int index) {
+void *GET_HEAD_BP(int index) {
   return link_list + (index * kHeadBlockSize) + WSIZE;
 }
 
@@ -143,9 +143,9 @@ void *implicit_find_fit(size_t asize) {
   void *current_bp = heap_listp;
 
   void *next_bp = NULL;
-  while ((next_bp = NEXT_BLKP(current_bp)) &&
-    !(GET_SIZE(HDRP(next_bp)) == 0 && GET_ALLOC(next_bp) == 0)) {
-    if (GET_SIZE(HDRP(next_bp)) >= asize && GET_ALLOC(next_bp) == 0) {
+  while ((next_bp = NEXT_BLKP(current_bp)) != NULL &&
+    !(GET_SIZE(HDRP(next_bp)) == 0 && GET_ALLOC(HDRP(next_bp)) == 1)) {
+    if (GET_SIZE(HDRP(next_bp)) >= asize && GET_ALLOC(HDRP(next_bp)) == 0) {
       return next_bp;
     }
     current_bp = next_bp;
@@ -357,7 +357,6 @@ void *explicit_extend_heap(size_t extend_dsize) {
 
   int fit_index = find_fit_index(extend_dsize);
 
-  void *footer = FTRP(bp);
   explicit_insert_to_list(bp, fit_index);
 
   return explicit_coalesce(bp, 1);
@@ -468,7 +467,7 @@ void *mm_malloc(size_t size) {
     exit(1);
   }
 #ifdef VM_EXPLICIT_LINK
-  void* res = explicit_mm_malloc(size);
+  void *res = explicit_mm_malloc(size);
 #else
   void* res = implicit_mm_malloc(size);
 #endif // VM_EXPLICIT_LINK
