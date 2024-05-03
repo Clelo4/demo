@@ -4,6 +4,8 @@
 
 #include "memlib.h"
 
+#include <string.h>
+
 // 最大堆内存大小
 #define MAX_HEAP (1<<28)
 
@@ -30,9 +32,12 @@ void *mem_sbrk(int incr) {
   if ((incr < 0) || (mem_brk + incr) > mem_max_addr) {
     errno = ENOMEM;
     fprintf(stderr, "Error: mem_sbrk failed. Ran out of memory...\n");
-    return (void *) -1;
+    exit(1);
   }
   mem_brk += incr;
-  printf("cur mem size: %ld\n", mem_brk - mem_heap);
+#ifdef DEBUG
+  printf("cur mem size: %ld incr: %d  %p  %p  \n", mem_brk - mem_heap, incr, mem_brk, mem_heap);
+#endif
+
   return (void *) old_brk;
 }

@@ -15,7 +15,14 @@ if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
     add_definitions(-D__x86_64__)
 endif()
 
-#option(BUILD_SHARED_LIBS "Build shared libray" ON)
+option(BUILD_SHARED_LIBS "Build shared libray" ON)
+
+include(CMakePrintHelpers)
+cmake_print_variables(CMAKE_BUILD_TYPE)
+
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+    add_definitions(-DDEBUG)
+endif()
 
 add_executable(translate_virtual_to_physical_address translate_virtual_to_physical_address.c)
 

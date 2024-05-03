@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -158,6 +159,9 @@ void *implicit_find_fit(size_t asize) {
 void implicit_place(void *bp, size_t asize) {
   size_t total_size = GET_SIZE(HDRP(bp));
   size_t remain_size = total_size - asize;
+
+  PUT(HDRP(bp), PACK(total_size, 1));
+  PUT(FTRP(bp), PACK(total_size, 1));
 
   // 默认使用total_size大小，如果剩余remain_size大于MIN_BLOCK_SIZE，则使用asize
   if (remain_size >= MIN_BLOCK_SIZE) {
@@ -323,6 +327,8 @@ void explicit_place(void *bp, size_t adsize) {
   size_t total_size = GET_SIZE(HDRP(bp));
   size_t remain_size = total_size - adsize * DSIZE;
 
+  PUT(HDRP(bp), PACK(total_size, 1));
+  PUT(FTRP(bp), PACK(total_size, 1));
   explicit_remove_block(bp);
 
   // 分割当前块

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -24,7 +25,7 @@ void malloc_single_allocation_and_free(void) {
 
 void malloc_multiple_allocations_and_free(void) {
   int *a = mm_malloc(sizeof(int));
-  int *b = mm_malloc(sizeof(int));
+  long *b = mm_malloc(sizeof(long));
   *a = 12;
   *b = 24;
   mm_free(a);
@@ -32,19 +33,17 @@ void malloc_multiple_allocations_and_free(void) {
   // Check if memory is freed properly
 }
 
-void malloc_zero_size_allocation(void) {
-  // int *a = mm_malloc(0);
-  // Check if NULL is returned
+int get_random_number(int min, int max) {
+  return rand() % (max - min + 1) + min;
 }
 
 void malloc_large_size_allocation(void) {
-  void** ptr_list = (void**)malloc(1024 * sizeof(void*));
-  int cout = 118;
+  int cout = 10240;
+  void **ptr_list = (void **) malloc((cout + 2) * sizeof(void *));
   for (int i = 1; i <= cout; i++) {
-    void *a = mm_malloc(i);
-    ptr_list[i] = a;
-    // mm_free(ptr_list[i]);
-    // Check if memory is allocated and freed properly
+    int num = i + get_random_number(1, cout);
+    ptr_list[i] = mm_malloc(num);
+    assert(ptr_list[i] != ptr_list[i - 1]);
   }
   for (int i = 1; i <= cout; i++) {
     mm_free(ptr_list[i]);
@@ -70,22 +69,22 @@ int main(void) {
   mem_init();
   mm_init();
 
-  void* a = malloc(sizeof(int));
-  printf("%p\n", a);
-  printf("%p\n", a + 2);
-
+  int* start_ptr = mm_malloc(sizeof(int));
+  mm_free(start_ptr);
   malloc_multiple_allocations_and_free();
-  for (int i = 0; i < 5; i++) {
+  for (int i = 1; i < 100; i++) {
+    int* start = mm_malloc(sizeof(int) * i * i);
     malloc_multiple_allocations_and_free();
     test_mm_malloc();
     malloc_single_allocation_and_free();
     malloc_multiple_allocations_and_free();
-    // malloc_zero_size_allocation();
     malloc_large_size_allocation();
     malloc_and_free_in_loop();
-    // malloc_without_free();
     malloc_multiple_allocations_and_free();
+    mm_free(start);
   }
+  int* end_ptr = mm_malloc(sizeof(int));
+  assert(start_ptr == end_ptr);
 
   return 0;
 }
