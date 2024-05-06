@@ -25,7 +25,7 @@ void mem_init(void) {
  * and returns the start address ot the new area. this model, the heap cannotbe
  * shrunk.
  */
-void *mem_sbrk(int incr) {
+void *mem_sbrk(size_t incr) {
   char *old_brk = mem_brk;
   if ((incr < 0) || (mem_brk + incr) > mem_max_addr) {
     errno = ENOMEM;
@@ -34,7 +34,7 @@ void *mem_sbrk(int incr) {
   }
   mem_brk += incr;
 #ifdef DEBUG
-  printf("cur mem size: %ld incr: %d  %p  %p  \n", mem_brk - mem_heap, incr, mem_brk, mem_heap);
+  printf("cur mem size: %ld incr: %ld  %p  %p  \n", mem_brk - mem_heap, incr, mem_brk, mem_heap);
 #endif
 
   return (void *) old_brk;

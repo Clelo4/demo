@@ -48,6 +48,9 @@
 // Get pre link block pointer
 #define PRE_BLOCK_PTR(bp) (*(void**)bp)
 
+// Get head of bp
+#define GET_HEAD_BP(index) ((link_list) + ((index) * kHeadBlockSize) + WSIZE)
+
 static char *heap_listp = NULL;
 
 static void *implicit_find_fit(size_t asize);
@@ -63,24 +66,19 @@ static char *link_list;
 
 const int kHeadBlockSize = WSIZE + sizeof(void *) * 2 + WSIZE;
 
-// #define GET_HEAD_BP(index) ((link_list) + ((index) * kHeadBlockSize) + WSIZE)
-void *GET_HEAD_BP(int index) {
-  return link_list + (index * kHeadBlockSize) + WSIZE;
-}
-
 static void *explicit_find_fit(size_t adsize);
 
 inline int find_fit_index(size_t adsize);
 
 static void explicit_place(void *bp, size_t adsize);
 
-static void *explicit_extend_heap(size_t words);
+static void *explicit_extend_heap(size_t extend_dsize);
 
-static void *explicit_coalesce(void *bp, int is_free);
+static void *explicit_coalesce(void *bp, size_t is_free);
 
 static void explicit_remove_block(void *bp);
 
-void explicit_insert_to_list(void *bp, int index);
+void explicit_insert_to_list(void *bp, size_t index);
 
 inline static int implicit_mm_init(void) {
   if ((heap_listp = mem_sbrk(MIN_BLOCK_SIZE)) == (void *) -1) return -1;
@@ -283,7 +281,7 @@ inline static void explicit_mm_free(void *bp) {
 }
 
 void *explicit_find_fit(size_t adsize) {
-  int start_i = 0;
+  size_t start_i = 0;
 
   if (adsize <= 128) {
     start_i = adsize - 1;
@@ -291,7 +289,7 @@ void *explicit_find_fit(size_t adsize) {
     start_i = 128;
   }
 
-  for (int i = start_i; i <= 130; i++) {
+  for (size_t i = start_i; i <= 130; i++) {
     void *head = GET_HEAD_BP(i);
     void *cur = NEXT_BLOCK_PTR(head);
     while (cur != NULL) {
@@ -310,7 +308,7 @@ int find_fit_index(size_t adsize) {
   // 将新分割出来的块放在link_list中合适的位置
   int fit_index;
   if (adsize <= 128) {
-    fit_index = adsize - 1;
+    fit_index = (int)adsize - 1;
   } else if (adsize <= 256) {
     fit_index = 128;
   } else if (adsize <= 512) {
@@ -339,7 +337,7 @@ void explicit_place(void *bp, size_t adsize) {
     PUT(FTRP(next), PACK(remain_size, 0));
 
     // 将新分割出来的空闲块，放在link_list中合适的位置
-    int next_fit_index = find_fit_index(remain_size / DSIZE);
+    size_t next_fit_index = find_fit_index(remain_size / DSIZE);
     explicit_insert_to_list(next, next_fit_index);
   }
 }
@@ -360,7 +358,7 @@ void *explicit_extend_heap(size_t extend_dsize) {
   return explicit_coalesce(bp, 1);
 }
 
-void *explicit_coalesce(void *bp, int is_free) {
+void *explicit_coalesce(void *bp, size_t is_free) {
   size_t size = GET_SIZE(HDRP(bp));
 
   size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
@@ -442,7 +440,7 @@ static void explicit_remove_block(void *bp) {
     PRE_BLOCK_PTR(NEXT_BLOCK_PTR(bp)) = PRE_BLOCK_PTR(bp);
 }
 
-void explicit_insert_to_list(void *bp, int index) {
+void explicit_insert_to_list(void *bp, size_t index) {
   void *head = GET_HEAD_BP(index);
   NEXT_BLOCK_PTR(bp) = NEXT_BLOCK_PTR(head);
   PRE_BLOCK_PTR(bp) = head;
