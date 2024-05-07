@@ -35,18 +35,18 @@ int main(void)
 
     // 创建一个固定在物理内存的虚拟内存缓存
     void *buffer = createBuffer();
-    printf("Virutal memeory address: 0x%llx\n", (uint64_t)buffer);
+    printf("Virutal memeory address: 0x%lx\n", (uint64_t)buffer);
 
     // 获取虚拟内存buffer的物理内存表编号PPN（Physical Page Number）
     uint64_t ppn = getPhysicalPageNumber(buffer);
-    printf("PPN (Physical Page Number): 0x%llx\n", ppn);
+    printf("PPN (Physical Page Number): 0x%lx\n", ppn);
 
     // 获取虚拟内存buffer的页内偏移量（Virtual Page Offer）
     uint64_t vpo = (uint64_t)buffer % PAGE_SIZE;
 
     // 计算虚拟内存buffer的全局物理内存偏移量
     uint64_t memOffset = (ppn << PAGE_SHIFT) + vpo;
-    printf("Buffer's physical memory offset: 0x%llx\n", memOffset);
+    printf("Buffer's physical memory offset: 0x%lx\n", memOffset);
 
     // 用root用户打开全局物理内存
     int memFd = open("/dev/mem", O_RDWR);
