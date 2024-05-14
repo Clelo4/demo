@@ -32,9 +32,9 @@ endif()
 add_library(asio_demo INTERFACE)
 
 find_package(Threads REQUIRED)
-find_package(Boost 1.53.0 COMPONENTS system REQUIRED)
+find_package(Boost 1.53.0 COMPONENTS system thread REQUIRED)
 target_include_directories(asio_demo INTERFACE ${Boost_INCLUDE_DIRS})
-target_link_libraries(asio_demo INTERFACE Boost::boost Boost::system)
+target_link_libraries(asio_demo INTERFACE Boost::boost Boost::system Boost::thread)
 
 add_executable(tuttimer1 "./tutorial/tuttimer1.cpp")
 target_link_libraries(tuttimer1 asio_demo)
@@ -47,3 +47,6 @@ target_link_libraries(tuttimer3 asio_demo)
 
 add_executable(tuttimer4 "./tutorial/tuttimer4.cpp")
 target_link_libraries(tuttimer4 asio_demo)
+
+add_executable(tuttimer5 "./tutorial/tuttimer5.cpp")
+target_link_libraries(tuttimer5 asio_demo)
