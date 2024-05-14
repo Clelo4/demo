@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.7)
-project(memory_manager C CXX)
+project(asio_demo C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
@@ -29,23 +29,21 @@ if (CMAKE_BUILD_TYPE MATCHES "Debug")
     add_definitions(-DDEBUG)
 endif()
 
-add_executable(translate_virtual_to_physical_address translate_virtual_to_physical_address.c)
+add_library(asio_demo INTERFACE)
 
-add_library(vm_implicit "")
-target_sources(vm_implicit PRIVATE "./vm/mm.c" "./vm/mm.h" "./vm/memlib.c" "./vm/memlib.h")
+find_package(Threads REQUIRED)
+find_package(Boost 1.53.0 COMPONENTS system REQUIRED)
+target_include_directories(asio_demo INTERFACE ${Boost_INCLUDE_DIRS})
+target_link_libraries(asio_demo INTERFACE Boost::boost Boost::system)
 
-add_library(vm_explicit "")
-target_sources(vm_explicit PRIVATE "./vm/mm.c" "./vm/mm.h" "./vm/memlib.c" "./vm/memlib.h")
-target_compile_definitions(vm_explicit PRIVATE "VM_EXPLICIT_LINK")
+add_executable(tuttimer1 "./tutorial/tuttimer1.cpp")
+target_link_libraries(tuttimer1 asio_demo)
 
-add_executable(vm_implicit_test "./vm/vm_test.c")
-target_link_libraries(vm_implicit_test vm_implicit)
+add_executable(tuttimer2 "./tutorial/tuttimer2.cpp")
+target_link_libraries(tuttimer2 asio_demo)
 
-add_executable(vm_explicit_test "./vm/vm_test.c")
-target_link_libraries(vm_explicit_test vm_explicit)
+add_executable(tuttimer3 "./tutorial/tuttimer3.cpp")
+target_link_libraries(tuttimer3 asio_demo)
 
-add_library(dlmalloc ""
-        dlmalloc/dlmalloc.h)
-target_sources(dlmalloc PRIVATE "./dlmalloc/dlmalloc.c")
-
-add_subdirectory(./asio_demo)
+add_executable(tuttimer4 "./tutorial/tuttimer4.cpp")
+target_link_libraries(tuttimer4 asio_demo)
