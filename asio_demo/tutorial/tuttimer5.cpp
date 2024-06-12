@@ -5,7 +5,7 @@
 
 class Printer {
 public:
-  Printer(boost::asio::io_context &io)
+  explicit Printer(boost::asio::io_context &io)
       : strand_(boost::asio::make_strand(io)),
         timer1_(io, boost::asio::chrono::seconds(1)),
         timer2_(io, boost::asio::chrono::seconds(1)), count_(0) {

@@ -4,7 +4,7 @@
 
 class Printer {
 public:
-  Printer(boost::asio::io_context& io): timer_(io, boost::asio::chrono::seconds(1)) {
+  explicit Printer(boost::asio::io_context& io): count_(0), timer_(io, boost::asio::chrono::seconds(1)) {
     timer_.async_wait(boost::bind(&Printer::print, this));
   }
   ~Printer() { std::cout << "Final count is" << count_ << std::endl; }
