@@ -39,7 +39,7 @@ target_link_libraries(asio_demo INTERFACE Boost::boost Boost::system Boost::thre
 # 查找OpenSSL库
 find_package(OpenSSL REQUIRED)
 target_include_directories(asio_demo INTERFACE ${OPENSSL_INCLUDE_DIR})
-# OpenSSL库
+# 链接OpenSSL库
 target_link_libraries(asio_demo INTERFACE ${OPENSSL_LIBRARIES})
 
 add_executable(tuttimer1 "./tutorial/tuttimer1.cpp")
