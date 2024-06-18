@@ -50,3 +50,6 @@ target_link_libraries(tuttimer4 asio_demo)
 
 add_executable(tuttimer5 "./tutorial/tuttimer5.cpp")
 target_link_libraries(tuttimer5 asio_demo)
+
+add_executable(echo_server "./network/echo_server.cpp")
+target_link_libraries(echo_server asio_demo)
