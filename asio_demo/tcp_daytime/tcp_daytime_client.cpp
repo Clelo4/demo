@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     tcp::resolver::results_type endpoints =
         resolver.resolve("www.example.com", "http");
 
-    auto res = endpoints->endpoint();
+    auto res = endpoints->endpoint().address();
 
     // 定义服务器端点
     tcp::endpoint server_endpoint(boost::asio::ip::address::from_string(host),
