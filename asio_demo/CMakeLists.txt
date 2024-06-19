@@ -62,3 +62,10 @@ target_link_libraries(echo_server asio_demo)
 
 add_executable(send_https "./network/send_https.cpp")
 target_link_libraries(send_https asio_demo)
+
+add_executable(tcp_daytime_client "./tcp_daytime/tcp_daytime_client.cpp")
+target_link_libraries(tcp_daytime_client asio_demo)
+
+add_executable(tcp_daytime_server
+        tcp_daytime/tcp_daytime_server.cpp)
+target_link_libraries(tcp_daytime_server asio_demo)
