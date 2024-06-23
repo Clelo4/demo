@@ -51,3 +51,5 @@ target_sources(dlmalloc PRIVATE "./dlmalloc/dlmalloc.c")
 add_subdirectory(./asio_demo)
 
 add_subdirectory(./syscall)
+
+add_subdirectory(./currency)
