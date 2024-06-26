@@ -1,5 +1,4 @@
 #include <chrono>
-#include <emmintrin.h>
 #include <iostream>
 #include <numeric> // 用于计算平均值
 #include <thread>
@@ -8,6 +7,32 @@
 std::atomic<bool> flag(false);
 std::atomic<long> count(0);
 
+#if defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
+#include <emmintrin.h>
+#endif
+
+void cpu_pause() {
+#if defined(__x86_64__) || defined(__i386__)
+#if defined(__GNUC__)
+  _mm_pause();
+#else
+#ifdef _MSC_VER
+  // For MSVC (Microsoft Visual C++)
+  _mm_pause();
+#else
+  // For other compilers, use inline assembly if supported
+  __asm {
+      pause
+  }
+#endif
+#endif
+#elif defined(__arm__) || defined(__aarch64__)
+  __asm__ volatile("yield");
+#elif defined(__arm__) && defined(__ARM_ARCH) && (__ARM_ARCH >= 7)
+  __asm__ volatile("nop");
+#endif
+}
+
 // 空循环的自旋等待
 void spin_wait_empty() {
   while (!flag.load(std::memory_order_relaxed)) {
@@ -15,10 +40,10 @@ void spin_wait_empty() {
   }
 }
 
-// 使用_mm_pause()的自旋等待
-void spin_wait_mm_pause() {
+// 使用cpu_pause()的自旋等待
+void spin_wait_pause() {
   while (!flag.load(std::memory_order_relaxed)) {
-    _mm_pause();
+    cpu_pause();
   }
 }
 
@@ -42,7 +67,7 @@ int main() {
 
     // 测试使用_mm_pause()的性能
     auto start_mm_pause = std::chrono::high_resolution_clock::now();
-    std::thread t2(spin_wait_mm_pause);
+    std::thread t2(spin_wait_pause);
     std::this_thread::sleep_for(
         std::chrono::milliseconds(10)); // 让自旋等待一段时间
     flag.store(true, std::memory_order_relaxed);
