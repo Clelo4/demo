@@ -21,9 +21,7 @@ void cpu_pause() {
   _mm_pause();
 #else
   // For other compilers, use inline assembly if supported
-  __asm {
-      pause
-  }
+  __asm__ volatile ("pause");
 #endif
 #endif
 #elif defined(__arm__) || defined(__aarch64__)
