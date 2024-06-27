@@ -11,7 +11,7 @@ std::atomic<long> count(0);
 #include <emmintrin.h>
 #endif
 
-void cpu_pause() {
+void cpu_spin_pause() {
 #if defined(__x86_64__) || defined(__i386__)
 #if defined(__GNUC__)
   _mm_pause();
@@ -21,15 +21,13 @@ void cpu_pause() {
   _mm_pause();
 #else
   // For other compilers, use inline assembly if supported
-  __asm {
-      pause
-  }
+  __asm__ volatile("pause");
 #endif
 #endif
-#elif defined(__arm__) || defined(__aarch64__)
-  __asm__ volatile("yield");
 #elif defined(__arm__) && defined(__ARM_ARCH) && (__ARM_ARCH >= 7)
   __asm__ volatile("nop");
+#elif defined(__arm__) || defined(__aarch64__)
+  __asm__ volatile("yield");
 #endif
 }
 
@@ -40,10 +38,10 @@ void spin_wait_empty() {
   }
 }
 
-// 使用cpu_pause()的自旋等待
+// 使用cpu_spin_pause()的自旋等待
 void spin_wait_pause() {
   while (!flag.load(std::memory_order_relaxed)) {
-    cpu_pause();
+    cpu_spin_pause();
   }
 }
 
